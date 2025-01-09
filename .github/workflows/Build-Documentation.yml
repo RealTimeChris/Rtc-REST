@@ -1,0 +1,43 @@
+name: Build/Upload Documentation.
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  Build-Documentation:
+    name: Build Documentation
+    runs-on: ubuntu-22.04
+
+    steps:
+         - name: Download and install Doxygen, along with its dependencies.
+           run: |
+                sudo apt-get update
+                sudo git clone https://github.com/doxygen/doxygen
+                cd doxygen
+                sudo mkdir build
+                sudo cmake -G "Unix Makefiles"
+                sudo make
+                sudo make install
+                sudo apt-get install bison
+                sudo apt-get install flex
+                sudo apt-get install graphviz
+                          
+         - name: Collect the original Repo for the docs.
+           run: |
+                sudo git config --global user.email "40668522+RealTimeChris@users.noreply.github.com"
+                sudo git config --global user.name "realtimechris"
+                sudo git clone https://realtimechris:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/realtimechris/Rtc-REST-Docs --depth=1
+
+         - name: Collect the documentation and generate it.
+           run: |
+                sudo git clone https://github.com/RealTimeChris/Rtc-REST --depth=1
+                cd Rtc-REST/Documentation/Doxygen 
+                sudo doxygen || true
+                
+         - name: Commit and push the docs to the repo.
+           run: |
+                cd Rtc-REST-Docs 
+                sudo git add . 
+                sudo git commit -m "Updates!" || true
+                sudo git push origin main || true
